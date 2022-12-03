@@ -80,7 +80,7 @@ class BookView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data(**kwargs)
-        context['books']=Book.objects.all()
+        context['books']=context['books']
 
         search_input=self.request.GET.get('search-area') or ''
         if search_input:
@@ -160,10 +160,10 @@ class registerStudent(View):
 
     def post(self, request, id="0"):
         if id=="0":
-            form = RegistrationForm(request.POST)
+            form = RegistrationForm(request.POST, request.FILES)
         else:
             student = Account.objects.get(pk=id)
-            form = AccountUpdateForm(request.POST,instance=student)  
+            form = AccountUpdateForm(request.POST,request.FILES,instance=student)  
         if form.is_valid():
             form.save()
             messages.success(request, 'Succefully Registered!')
@@ -192,7 +192,16 @@ class borrowerDelete(LoginRequiredMixin):
         borrower.delete()
         return redirect('library:borrower-list')
 
+# class bookCreate(LoginRequiredMixin, UserAccessMixin, CreateView):
+#     model=Book
+#     permission_required= 'books.add_books'
+#     fields='__all__'
+#     success_url=reverse_lazy('library:book-list')
 
+
+#     def form_valid(self, form):
+#         form.instance.user=self.request.user
+#         return super(bookCreate, self).form_valid(form)
 class bookCreate(LoginRequiredMixin,View):
     def get(self,request,id="0"):
         if id=="0":
@@ -211,16 +220,16 @@ class bookCreate(LoginRequiredMixin,View):
 
     def post(self, request, id="0"):
         if id=="0":
-            form = BookForm(request.POST)
+            form = BookForm(request.POST,request.FILES)
         else:
             book = Book.objects.get(pk=id)
-            form = BookForm(request.POST,instance=book)  
+            form = BookForm(request.POST,request.FILES,instance=book)  
         if form.is_valid():
             form.save()
             messages.success(request, 'Succefully added a new book!')
             return redirect('library:book-list')
         else:
-            messages.error(request, "An error occured while registering Student!")
+            messages.error(request, "An error occured while adding a book!")
 
 
 class borrowBook(LoginRequiredMixin,View):

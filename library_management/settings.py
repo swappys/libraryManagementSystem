@@ -25,7 +25,7 @@ SECRET_KEY = '_tt4vrs-%_aptwgr=*6mggr2#*fu*1*k)bw2b-_75#+%tme1l0'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['django-env.eba-3s2vygie.us-east-1.elasticbeanstalk.com']
+ALLOWED_HOSTS = ['django-env.eba-3s2vygie.us-east-1.elasticbeanstalk.com','f6e2a9d772f249ac8e51911c2bab6f0d.vfs.cloud9.us-east-1.amazonaws.com']
 
 
 # Application definition
