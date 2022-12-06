@@ -14,7 +14,8 @@ import random
 from datetime import date, timedelta, datetime
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-# from package_libman import example
+from package_libman import example
+# from example_package_x21174041 import example
 
 
 class MyAccountManager(BaseUserManager):
@@ -29,9 +30,6 @@ class MyAccountManager(BaseUserManager):
             username=username,
             name=name,
             enrollment_no = enrollment_no,
-
-
-
         )
 
         user.set_password(password)
@@ -57,6 +55,7 @@ class MyAccountManager(BaseUserManager):
 class Account(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, unique=True,
                           default=uuid.uuid4, editable=False)
+    # phoneNumber = models.CharField(max_length=13)
     email = models.EmailField(verbose_name="email", max_length=60, unique=True)
     name = models.CharField(max_length=60, unique=False)
     username = models.CharField(max_length=30, unique=True)
@@ -72,7 +71,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name', 'username', 'enrollment_no']
+    REQUIRED_FIELDS = ['name', 'username','enrollment_no']
 
     objects = MyAccountManager()
 
@@ -158,10 +157,11 @@ class Borrower(models.Model):
     def __str__(self):
         return self.student.name.title()+" borrowed "+self.book.title.title()
 
-    # def fine(self):
-    #     returnDate = self.return_date
-    #     today = date.today()
-    #     return example.calcFine(returnDate,today)
+    def fine(self):
+        returnDate = self.return_date
+        today = date.today()
+        # return example.calcFine(returnDate,today)
+        return example.calcFine(returnDate, today);
 
 
 # def calcFine(returnDate, today):

@@ -16,8 +16,13 @@ from django.http import request
 from datetime import datetime, timedelta
 from django.contrib import messages
 from django.views import View
+import logging
+import boto3
+import os
+from botocore.exceptions import ClientError
+from .snsContent import Publisher
 
-
+a_publisher = Publisher()
 class UserAccessMixin(PermissionRequiredMixin):
     def dispatch(self, request, *args, **kwargs):
         if not self.has_permission():
@@ -166,6 +171,8 @@ class registerStudent(View):
             form = AccountUpdateForm(request.POST,request.FILES,instance=student)  
         if form.is_valid():
             form.save()
+            imgName = request.FILES['pic'].name;
+            upload_file("lmsstudents",os.path.join("media/students", imgName))
             messages.success(request, 'Succefully Registered!')
             return redirect('library:student-list')
         else:
@@ -221,18 +228,50 @@ class bookCreate(LoginRequiredMixin,View):
     def post(self, request, id="0"):
         if id=="0":
             form = BookForm(request.POST,request.FILES)
+            
         else:
             book = Book.objects.get(pk=id)
-            form = BookForm(request.POST,request.FILES,instance=book)  
+            form = BookForm(request.POST,request.FILES,instance=book)
+            
+        
         if form.is_valid():
             form.save()
+            imgName = request.FILES['pic'].name;
+            # upload_file("lmsbooks",imgName)
+            upload_file("lmsbooks",os.path.join("media/books", imgName))
             messages.success(request, 'Succefully added a new book!')
             return redirect('library:book-list')
         else:
             messages.error(request, "An error occured while adding a book!")
+    
+def upload_file(bucket,file_name, object_key=None):
+        """Upload a file to an S3 bucket
+        :param file_name: File to upload
+        :param bucket: Bucket to upload to
+        :param key: S3 object key. If not specified then file_name is used
+        :return: True if file was uploaded, else False
+        """
+        if object_key is None:
+            object_key = file_name
+        
+        s3_client = boto3.client('s3')
+        try:
+            response = s3_client.upload_file(file_name, bucket, object_key)
+            '''
+            # an example of using the ExtraArgs optional parameter to set the ACL (access control list) value 'public-read' to the S3 object
+            response = s3_client.upload_file(file_name, bucket, key, 
+            ExtraArgs={'ACL': 'public-read'})
+            '''
+        except ClientError as e:
+            logging.error(e)
+            return False
+        return True    
+            
+   
 
 
 class borrowBook(LoginRequiredMixin,View):
+
     def get(self,request,id="0"):
         if id=="0":
             form = IssueBook()
@@ -250,6 +289,7 @@ class borrowBook(LoginRequiredMixin,View):
         
 
     def post(self, request, id="0"):
+        result="0";
         if id=="0":
             form = IssueBook(request.POST)
         else:
@@ -258,6 +298,7 @@ class borrowBook(LoginRequiredMixin,View):
         if form.is_valid():
             instance = form.save(commit=False)
             book = Book.objects.get(id=instance.book.id)
+            # string = "You have issued "+book
             student = Account.objects.get(id=instance.student.id)
             if len(student.borrowed)<6:
                 result=reduceCpy(student, book,instance)
@@ -269,6 +310,7 @@ class borrowBook(LoginRequiredMixin,View):
             else:
                     messages.error(self.request,"Student has reached the maximum book count.")
             form.save()
+            a_publisher.send_SMS_message("+353899543363", "Issued a book")
             if result=="0":
                 messages.success(request, 'Succefully issued a book!')
             return redirect('library:borrower-list')
@@ -303,6 +345,8 @@ class createChart(View):
             'labels':labels,
             'data':data
         })
+
+
 
 
 
